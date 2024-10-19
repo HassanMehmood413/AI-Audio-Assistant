@@ -42,7 +42,7 @@ pydantic_core
 pydeck
 pydub
 Pygments
-speech_recognition
+SpeechRecognition
 sounddevice
 python-dateutil
 pytz
