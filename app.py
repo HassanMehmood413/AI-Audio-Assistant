@@ -1,13 +1,14 @@
 import os
+import streamlit as st
+from streamlit_mic_recorder import speech_to_text
 import speech_recognition as sr
 from gtts import gTTS
-import streamlit as st
-from openai import OpenAI
 import tempfile
 from langdetect import detect
 import sounddevice as sd
 import numpy as np
 from pydub import AudioSegment
+from openai import OpenAI
 
 # Initialize OpenAI client
 client = OpenAI(
@@ -47,31 +48,11 @@ language_mapping = {
 # Global variables for audio control
 current_audio = None
 audio_segment = None
-audio_file = None  # Global variable to store audio file path
+audio_file = None
 
 def detect_language(text):
     """Detect the language of the input text."""
     return detect(text)
-
-def audio_to_text(lang="en"):
-    """Convert audio to text using SpeechRecognition, with specified language."""
-    recognizer = sr.Recognizer()
-    
-    with sr.Microphone() as source:
-        st.write("Listening... Please speak.")
-        audio_data = recognizer.listen(source)
-        st.write("Recording stopped. Processing your input...")
-        
-        try:
-            text = recognizer.recognize_google(audio_data, language=lang)
-            st.write(f"You: {text}")
-            return text
-        except sr.UnknownValueError:
-            st.write("Sorry, I could not understand the audio.")
-            return None
-        except sr.RequestError as e:
-            st.write(f"Could not request results; {e}")
-            return None
 
 def text_to_audio(text, lang):
     """Convert text to speech and save to an MP3 file."""
@@ -94,13 +75,12 @@ def play_audio(file_path):
 
     # Play audio
     sd.play(samples, samplerate=audio_segment.frame_rate)
-    sd.wait()  # Wait until the audio is finished playing
+    sd.wait()
 
 def get_response(user_input, age=None, weight=None):
     """Get AI response from OpenAI model."""
     conversation_history.append({"role": "user", "content": user_input})
     
-    # Include age and weight in the system message for context
     system_message = "You are an AI assistant who knows everything."
     if age is not None and weight is not None:
         system_message += f" The user is {age} years old and weighs {weight} kg."
@@ -124,76 +104,39 @@ def check_symptom(symptom_description):
             return advice
     return "I'm not sure about this symptom. Please consult a doctor for a more accurate diagnosis."
 
-def end_conversation():
-    """Function to end the conversation."""
-    st.write("Thank you for using the Health Assistant. Have a great day!")
-    st.stop()
-
-def emergency_contact():
-    """Function to provide emergency contact information."""
-    st.write("In case of emergency, please call your local emergency services or go to the nearest hospital.")
-
-# Function for single input and response
 def single_input_interaction():
-    st.write("Press the button below to provide your voice input.")
+    st.write("Press the button below and speak.")
     
-    if st.button("Record Voice Input"):
-        user_input = audio_to_text(user_profile["language"])
+    # Use the speech_to_text function for recording and converting speech to text
+    user_input = speech_to_text(
+        language='en',
+        start_prompt="Start recording",
+        stop_prompt="Stop recording",
+        just_once=True
+    )
+    
+    if user_input:
+        st.write(f"You: {user_input}")
+        detected_lang = detect_language(user_input)
+        lang = language_mapping.get(detected_lang, user_profile["language"])
+        st.write(f"Detected language: {lang}")
 
-        if user_input:
-            detected_lang = detect_language(user_input)
-            lang = language_mapping.get(detected_lang, user_profile["language"])
-            st.write(f"Detected language: {lang}")
+        # Determine appropriate response
+        response_text = check_symptom(user_input)
+        if response_text == "I'm not sure about this symptom. Please consult a doctor for a more accurate diagnosis.":
+            response_text = get_response(user_input, user_profile["age"], user_profile["weight"])
 
-            # Check for specific commands
-            if "health tip" in user_input.lower():
-                response_text = "Stay hydrated and get enough sleep."
-            elif "emergency" in user_input.lower():
-                emergency_contact()
-                return
-            else:
-                response_text = check_symptom(user_input)
-
-            if response_text == "I'm not sure about this symptom. Please consult a doctor for a more accurate diagnosis.":
-                response_text = get_response(user_input, user_profile["age"], user_profile["weight"])
-
-            # Convert text to audio and play it
-            global audio_file  # Use global variable for audio_file
-            audio_file = text_to_audio(response_text, lang)
-            st.write("Playing the response audio...")
-            play_audio(audio_file)
-
-            # Create buttons for audio control
-            if st.button("End Current Output"):
-                sd.stop()  # Stop the audio playback
-                st.write("Audio playback stopped.")
-
-            if st.button("Repeat Last Response"):
-                if audio_file:  # Check if audio_file is available
-                    st.write("Repeating the last response audio...")
-                    play_audio(audio_file)
-
-            if st.button("Seek Backward"):
-                if audio_segment is not None:
-                    # Seek backward by 5 seconds
-                    new_start_time = max(0, len(audio_segment) - 5000)  # 5000 ms
-                    new_audio_segment = audio_segment[new_start_time:]  # Get last part
-                    new_audio_segment.export("temp_audio.mp3", format="mp3")  # Export to temp file
-                    st.write("Seeking backward in the audio...")
-                    play_audio("temp_audio.mp3")
+        audio_file = text_to_audio(response_text, lang)
+        st.write("Playing the response audio...")
+        play_audio(audio_file)
 
 # Streamlit UI
 st.title("Real-time Multilingual Audio Health Assistant")
-
-# User Profile Input
 st.sidebar.header("User Profile")
 user_language = st.sidebar.selectbox("Select Your Language", list(language_mapping.keys()))
 user_profile["language"] = language_mapping[user_language]
-
-# Input for Age and Weight
 user_age = st.sidebar.number_input("Enter Your Age", min_value=0, max_value=120, value=30)
 user_profile["age"] = user_age
-
 user_weight = st.sidebar.number_input("Enter Your Weight (kg)", min_value=0, value=70)
 user_profile["weight"] = user_weight
 

@@ -6,3 +6,5 @@ langdetect
 sounddevice
 numpy
 pydub
+bokeh
+streamlit-mic-recorder
