@@ -11,4 +11,3 @@ streamlit-mic-recorder
 ffmpeg-python
 streamlit-TTS
 python-dotenv
-cerebras_cloud_sdk
