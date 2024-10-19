@@ -10,12 +10,21 @@ import sounddevice as sd
 import numpy as np
 from pydub import AudioSegment
 from openai import OpenAI
+import os
+from cerebras.cloud.sdk import Cerebras
 
 # Initialize OpenAI client
 client = OpenAI(
     api_key=st.secrets["API_KEY"],  # Replace this with your API key
     base_url="https://api.aimlapi.com",
 )
+
+cerebras_client = Cerebras(
+    api_key=os.environ.get("CEREBRAS_API_KEY"),
+)
+
+
+
 
 # Maintain a conversation history and user profiles
 conversation_history = []
@@ -63,13 +72,53 @@ def get_response(user_input, age=None, weight=None):
     if age is not None and weight is not None:
         system_message += f" The user is {age} years old and weighs {weight} kg."
     
-    response = client.chat.completions.create(
-        model="gpt-4o-2024-08-06",
-        messages=[{"role": "system", "content": system_message}] + conversation_history
-    )
+    try: 
+        response = client.chat.completions.create(
+            model="gpt-4o-2024-08-06",
+            messages=[{"role": "system", "content": system_message}] + conversation_history
+        )
+    except Exception as e:
+        try:
+            response = cerebras_client.chat.completions.create(
+                model="llama3.1-8b",
+                messages=[{"role": "system", "content": system_message}] + conversation_history
+            )
+        except: 
+            pass
+    
+    # Assuming the emotion extraction is done by the OpenAI API and returned in the response
+    # The emotion is a string like "happy", "sad", "neutral", etc.    
+    # Map emotions to colors
+    emotion_color_map = {
+        "calm": "#A7C7E7",
+        "trust": "#A7C7E7",
+        "serenity": "#A7C7E7",
+        "balance": "#C8E6C9",
+        "harmony": "#C8E6C9",
+        "nature": "#C8E6C9",
+        "soothe": "#E1BEE7",
+        "relaxation": "#E1BEE7",
+        "care": "#F8BBD0",
+        "compassion": "#F8BBD0",
+        "warmth": "#F8BBD0",
+        "simplicity": "#D7CCC8",
+        "depressed": "#A7C7E7",  # Blue for depression
+        "default": "#A7C7E7"  # Default color is blue
+    }
+    
+
+    # Determine the color based on the emotion
+    
     
     assistant_message = response.choices[0].message.content
-    st.write(f"Assistant: {assistant_message}")
+    emotion_extraction_prompt = f"from above conversation history you have to extract teh emotion of user you have to give output as one of the {emotion_color_map.keys()} don't write any additional text and any code."
+
+
+    emotion = cerebras_client.chat.completions.create(model="llama3.1-8b", messages = conversation_history + [{"role": "user", "content": emotion_extraction_prompt}])
+    emotion = emotion.choices[0].message.content
+    color = emotion_color_map.get(emotion, emotion_color_map["default"])
+    # Display the assistant message in the determined color
+    st.markdown(f"<p style='color: {color};'>Assistant: {assistant_message}</p>", unsafe_allow_html=True)
     
     conversation_history.append({"role": "assistant", "content": assistant_message})
     
