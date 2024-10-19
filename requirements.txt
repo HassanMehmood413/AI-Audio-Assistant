@@ -8,3 +8,4 @@ numpy
 pydub
 bokeh
 streamlit-mic-recorder
+ffmpeg-python
