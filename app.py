@@ -11,7 +11,7 @@ from pydub import AudioSegment
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key=st.secrets["API_KEY"],  # Comma added
+    api_key=st.secrets["API_KEY"],  # Replace this with your API key
     base_url="https://api.aimlapi.com",
 )
 
@@ -27,63 +27,21 @@ medical_conditions_db = {
 
 # Supported language mappings for SpeechRecognition and gTTS
 language_mapping = {
-    "Afrikaans": "af",
-    "Amharic": "am",
-    "Arabic": "ar",
-    "Bulgarian": "bg",
-    "Bengali": "bn",
-    "Bosnian": "bs",
-    "Catalan": "ca",
-    "Czech": "cs",
-    "Welsh": "cy",
-    "Danish": "da",
-    "German": "de",
-    "Greek": "el",
-    "English": "en",
-    "Spanish": "es",
-    "Estonian": "et",
-    "Basque": "eu",
-    "Finnish": "fi",
-    "French": "fr",
-    "Galician": "gl",
-    "Gujarati": "gu",
-    "Hausa": "ha",
-    "Hindi": "hi",
-    "Croatian": "hr",
-    "Hungarian": "hu",
-    "Indonesian": "id",
-    "Icelandic": "is",
-    "Italian": "it",
-    "Hebrew": "iw",
-    "Japanese": "ja",
-    "Javanese": "jw",
-    "Khmer": "km",
-    "Kannada": "kn",
-    "Korean": "ko",
-    "Latin": "la",
-    "Lithuanian": "lt",
-    "Latvian": "lv",
-    "Malayalam": "ml",
-    "Marathi": "mr",
-    "Malay": "ms",
-    "Myanmar (Burmese)": "my",
-    "Nepali": "ne",
-    "Dutch": "nl",
-    "Norwegian": "no",
-    "Punjabi (Gurmukhi)": "pa",
-    "Polish": "pl",
-    "Tamil": "ta",
-    "Telugu": "te",
-    "Thai": "th",
-    "Filipino": "tl",
-    "Turkish": "tr",
-    "Ukrainian": "uk",
-    "Urdu": "ur",
-    "Vietnamese": "vi",
-    "Cantonese": "yue",
-    "Chinese (Simplified)": "zh-CN",
-    "Chinese (Mandarin/Taiwan)": "zh-TW",
-    "Chinese (Mandarin)": "zh"
+    "Afrikaans": "af", "Amharic": "am", "Arabic": "ar", "Bulgarian": "bg",
+    "Bengali": "bn", "Bosnian": "bs", "Catalan": "ca", "Czech": "cs",
+    "Welsh": "cy", "Danish": "da", "German": "de", "Greek": "el", 
+    "English": "en", "Spanish": "es", "Estonian": "et", "Basque": "eu",
+    "Finnish": "fi", "French": "fr", "Galician": "gl", "Gujarati": "gu",
+    "Hausa": "ha", "Hindi": "hi", "Croatian": "hr", "Hungarian": "hu",
+    "Indonesian": "id", "Icelandic": "is", "Italian": "it", "Hebrew": "iw",
+    "Japanese": "ja", "Javanese": "jw", "Khmer": "km", "Kannada": "kn",
+    "Korean": "ko", "Latin": "la", "Lithuanian": "lt", "Latvian": "lv",
+    "Malayalam": "ml", "Marathi": "mr", "Malay": "ms", "Myanmar (Burmese)": "my",
+    "Nepali": "ne", "Dutch": "nl", "Norwegian": "no", "Punjabi (Gurmukhi)": "pa",
+    "Polish": "pl", "Tamil": "ta", "Telugu": "te", "Thai": "th", 
+    "Filipino": "tl", "Turkish": "tr", "Ukrainian": "uk", "Urdu": "ur", 
+    "Vietnamese": "vi", "Cantonese": "yue", "Chinese (Simplified)": "zh-CN",
+    "Chinese (Mandarin/Taiwan)": "zh-TW", "Chinese (Mandarin)": "zh"
 }
 
 # Global variables for audio control
