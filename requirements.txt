@@ -9,3 +9,5 @@ pydub
 bokeh
 streamlit-mic-recorder
 ffmpeg-python
+streamlit-TTS
+python-dotenv

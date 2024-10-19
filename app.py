@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from streamlit_mic_recorder import speech_to_text
+from streamlit_TTS import auto_play, text_to_speech, text_to_audio
 import speech_recognition as sr
 from gtts import gTTS
 import tempfile
@@ -54,29 +55,6 @@ def detect_language(text):
     """Detect the language of the input text."""
     return detect(text)
 
-def text_to_audio(text, lang):
-    """Convert text to speech and save to an MP3 file."""
-    tts = gTTS(text=text, lang=lang)
-    output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-    tts.save(output_file.name)
-    return output_file.name
-
-def play_audio(file_path):
-    """Play audio using sounddevice."""
-    global audio_segment
-    
-    # Load the audio segment
-    audio_segment = AudioSegment.from_mp3(file_path)
-    samples = np.array(audio_segment.get_array_of_samples())
-
-    # Reshape the samples for stereo audio if necessary
-    if audio_segment.channels == 2:
-        samples = samples.reshape((-1, 2))
-
-    # Play audio
-    sd.play(samples, samplerate=audio_segment.frame_rate)
-    sd.wait()
-
 def get_response(user_input, age=None, weight=None):
     """Get AI response from OpenAI model."""
     conversation_history.append({"role": "user", "content": user_input})
@@ -125,10 +103,8 @@ def single_input_interaction():
         response_text = check_symptom(user_input)
         if response_text == "I'm not sure about this symptom. Please consult a doctor for a more accurate diagnosis.":
             response_text = get_response(user_input, user_profile["age"], user_profile["weight"])
-
-        audio_file = text_to_audio(response_text, lang)
-        st.write("Playing the response audio...")
-        play_audio(audio_file)
+        audio = text_to_audio(response_text, lang)
+        auto_play(audio)
 
 # Streamlit UI
 st.title("Real-time Multilingual Audio Health Assistant")
